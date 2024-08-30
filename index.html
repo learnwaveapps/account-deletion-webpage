@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Deletion Request</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        textarea {
+            height: 80px;
+            resize: none;
+        }
+
+        .response-message {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #28a745;
+        }
+
+        .error-message {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #dc3545;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 5px;
+            position: relative;
+        }
+
+        .progress-bar div {
+            height: 100%;
+            width: 0;
+            background-color: #007bff;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: width 0.4s ease;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Request Account Deletion</h1>
+        <p>If you would like to delete your account, please fill out the form below. We will process your request within 7 business days.</p>
+        
+        <form id="deletion-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="reason">Reason for Deletion (Optional):</label>
+            <textarea id="reason" name="reason"></textarea>
+            
+            <input type="submit" value="Request Deletion" id="submit-button">
+        </form>
+        
+        <div id="response-message" class="response-message"></div>
+        <div id="error-message" class="error-message"></div>
+        
+        <div class="progress-container hidden" id="progress-container">
+            <div class="progress-bar">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('deletion-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const submitButton = document.getElementById('submit-button');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+
+            // Disable the submit button and show progress bar
+            submitButton.classList.add('hidden');
+            progressContainer.classList.remove('hidden');
+
+            // Gather form data
+            const formData = new FormData(this);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                reason: formData.get('reason') || ''
+            };
+
+            // Send the data using fetch
+            fetch('https://us-central1-lucent-gk-and-pyqs-2c7c0.cloudfunctions.net/api/deleteAccountRequest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+                return response.text();
+            })
+            .then(text => {
+                document.getElementById('response-message').innerText = text;
+                document.getElementById('error-message').innerText = ''; // Clear any previous error messages
+                document.getElementById('deletion-form').reset(); // Clear the form fields
+                progressBar.style.width = '100%'; // Complete the progress bar
+            })
+            .catch(error => {
+                document.getElementById('error-message').innerText = `Error: ${error.message}`;
+                document.getElementById('response-message').innerText = ''; // Clear any previous success messages
+            })
+            .finally(() => {
+                // Re-enable the submit button and hide the progress bar
+                setTimeout(() => {
+                    submitButton.classList.remove('hidden');
+                    progressContainer.classList.add('hidden');
+                }, 2000); // Add a delay before re-enabling the button
+            });
+        });
+    </script>
+</body>
+</html>
